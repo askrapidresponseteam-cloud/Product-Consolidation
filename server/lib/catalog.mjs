@@ -68,6 +68,12 @@ export function rebuild() {
       list.push(p);
     }
   }
+  /* Stores spell vendors inconsistently ("pawsindia" / "Pawsindia"): merge by
+     lowercase and keep the most common spelling. */
+  const spellings = new Map();
+  for (const p of list) { const k = p.brand.toLowerCase(); let m = spellings.get(k); if (!m) spellings.set(k, (m = new Map())); m.set(p.brand, (m.get(p.brand) || 0) + 1); }
+  const canon = new Map([...spellings].map(([k, m]) => [k, [...m].sort((a, b) => b[1] - a[1] || (/^[A-Z]/.test(b[0]) - /^[A-Z]/.test(a[0])))[0][0]]));
+  for (const p of list) p.brand = canon.get(p.brand.toLowerCase());
   const matched = buildMatches(list);
   const brands = [...new Set(list.map((p) => p.brand))].sort((a, b) => a.localeCompare(b));
   catalog.list = list;
@@ -157,7 +163,7 @@ export async function refreshProduct(p) {
 const SORTS = {
   pop: (a, b) => (b.score - a.score) || a.title.localeCompare(b.title),
   plo: (a, b) => a.lo - b.lo,
-  phi: (a, b) => b.hi - a.hi,
+  phi: (a, b) => (b.lo - a.lo) || (b.hi - a.hi),   /* by the price the card shows */
   disc: (a, b) => ((a.gift || a.noPrice ? 1 : 0) - (b.gift || b.noPrice ? 1 : 0)) || (b.disc - a.disc) || (b.stock - a.stock) || a.title.localeCompare(b.title),
   save: (a, b) => (b.cmp ? Math.abs(b.cmp.diff) : -1) - (a.cmp ? Math.abs(a.cmp.diff) : -1),
   az: (a, b) => a.title.localeCompare(b.title),
