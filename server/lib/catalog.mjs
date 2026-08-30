@@ -63,6 +63,7 @@ export function rebuild() {
     for (const raw of s.products.values()) {
       if (!raw?.handle || !raw.title) continue;
       const p = normalize(s, s.si, raw);
+      if (!p.stock) continue;                 /* out of stock: not listed at all */
       p.url = s.base + p.url;
       list.push(p);
     }
@@ -95,6 +96,7 @@ async function crawlOne(s) {
   s.updatedAt = new Date().toISOString(); s.status = 'live';
   log(`[${s.key}] live: ${r.products.size} products (feed ${r.stats.feed}, +collections ${r.stats.collections}, sitemap ${r.stats.sitemap}, backfilled ${r.stats.backfilled}/${r.stats.missing})`);
   scheduleRebuild();
+  saveCache();                                   /* a restart mid-crawl keeps what's done */
 }
 
 export async function refreshAll() {
@@ -133,6 +135,12 @@ export async function refreshProduct(p) {
     s.products.set(raw.handle, raw);
     const fresh = normalize(s, s.si, raw);
     fresh.url = s.base + fresh.url;
+    if (!fresh.stock) {                       /* just went out of stock: delist it now */
+      const at = catalog.list.indexOf(p);
+      if (at >= 0) catalog.list.splice(at, 1);
+      catalog.byId.delete(p.id);
+      return { p: fresh, live: true, gone: true, checkedAt: new Date().toISOString() };
+    }
     /* rivals are re-matched on the next index build; this listing's own side
        of the comparison is recomputed from the prices just read */
     fresh.cmp = p.cmp ? { rows: p.cmp.rows } : null;
@@ -182,7 +190,6 @@ export function query(q) {
     if (pets.size && !pets.has(p.pet)) return false;
     if (cats.size && !cats.has(p.cat)) return false;
     if (brands.size && !brands.has(p.brand)) return false;
-    if (q.stock && !p.stock) return false;
     if (q.both && !p.cmp) return false;
     if (disc && p.disc < disc) return false;
     if (min != null && p.hi < min) return false;

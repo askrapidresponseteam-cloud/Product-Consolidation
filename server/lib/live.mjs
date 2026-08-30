@@ -58,6 +58,7 @@ async function run(si) {
       const r = await refreshProduct(p);
       if (!r.live) continue;
       did++;
+      if (r.gone) { for (const [res, c] of clients) if (c.ids.has(id)) { send(res, 'remove', { id }); c.ids.delete(id); } continue; }
       if (snapshot(r.p) !== before || r.p !== p) {
         const card = cardDTO(r.p);
         for (const [res, c] of clients) if (c.ids.has(id)) send(res, 'update', { card, checkedAt: r.checkedAt, changed: snapshot(r.p) !== before });

@@ -16,7 +16,8 @@ export function normalize(store, si, raw) {
   const brand = String(raw.vendor || '').trim() || store.label;
   const img = raw.images?.[0]?.src || raw.image?.src || '';
 
-  const vars = (raw.variants || []).map((v) => {
+  /* Sold-out variants are never shown, priced, or compared. */
+  const vars = (raw.variants || []).filter((v) => !!v.available).map((v) => {
     const name = v.title && v.title !== 'Default Title' ? String(v.title) : '';
     const price = Math.round(Number(v.price) || 0);
     const compare = Math.round(Number(v.compare_at_price) || 0);

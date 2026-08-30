@@ -33,7 +33,6 @@ function params(p) {
   if (S.min != null) sp.set('min', S.min);
   if (S.max != null) sp.set('max', S.max);
   if (S.disc) sp.set('disc', S.disc);
-  if (S.stock) sp.set('stock', '1');
   if (S.both) sp.set('both', '1');
   sp.set('sort', S.sort); sp.set('page', p);
   return sp.toString();
@@ -177,12 +176,11 @@ function drawFilters() {
         <input type="number" data-k="min" placeholder="Min" value="${S.min ?? ''}"><span>to</span>
         <input type="number" data-k="max" placeholder="Max" value="${S.max ?? ''}"></div>`) +
     box('Discount', 'disc', `<div class="pillrow">${[0, 20, 40, 60].map((d) => `<button class="pill" aria-pressed="${S.disc === d}" data-disc="${d}">${d ? d + '%+' : 'Any'}</button>`).join('')}</div>`) +
-    box('Availability', 'stock', `<label class="opt"><input type="checkbox" ${S.stock ? 'checked' : ''} data-flag="stock"><span class="lbl">In stock only</span></label>`) +
     box('Price check', 'cmp', `<label class="opt"><input type="checkbox" ${S.both ? 'checked' : ''} data-flag="both"><span class="lbl">Sold at 2+ stores</span><span class="n">${matchedTotal.toLocaleString('en-IN')}</span></label>`);
 
   if (held) { const back = facets.querySelector(`[data-k="${held.k}"]`); if (back) { back.focus(); if (held.start != null) { try { back.setSelectionRange(held.start, held.end); } catch (_) {} } } }
   [...facets.querySelectorAll('.scrolllist')].forEach((el, i) => { el.scrollTop = scrolls[i] || 0; });
-  const n = S.pets.size + S.cats.size + S.brands.size + (S.disc ? 1 : 0) + (S.stock ? 1 : 0) + (S.min != null ? 1 : 0) + (S.max != null ? 1 : 0);
+  const n = S.pets.size + S.cats.size + S.brands.size + (S.disc ? 1 : 0) + (S.min != null ? 1 : 0) + (S.max != null ? 1 : 0);
   fcount.hidden = !n; fcount.textContent = n;
 }
 
@@ -216,7 +214,6 @@ function renderChips() {
   S.cats.forEach((k) => c.push([k, tog(S.cats, k)]));
   S.brands.forEach((k) => c.push([k, tog(S.brands, k)]));
   if (S.disc) c.push([S.disc + '% off or more', () => { S.disc = 0; apply(); }]);
-  if (S.stock) c.push(['In stock', () => { S.stock = false; apply(); }]);
   if (S.both) c.push(['Sold at 2+ stores', () => { S.both = false; apply(); }]);
   if (S.min != null) c.push(['Over ' + inr(S.min), () => { S.min = null; apply(); }]);
   if (S.max != null) c.push(['Under ' + inr(S.max), () => { S.max = null; apply(); }]);
@@ -242,7 +239,11 @@ async function openP(id) {
   drawer.classList.add('on'); scrim.classList.add('on'); document.body.style.overflow = 'hidden';
   let p;
   try { p = await getJSON('/api/products/' + encodeURIComponent(id)); }
-  catch { drawer.querySelector('.dtitle').textContent = 'Could not load this product.'; return; }
+  catch (e) {
+    drawer.querySelector('.dtitle').textContent = /410/.test(e.message) ? 'This just sold out on the store.' : 'Could not load this product.';
+    const el = grid.querySelector(`[data-open="${CSS.escape(id)}"]`); if (el && /410/.test(e.message)) el.remove();
+    return;
+  }
   const rows = p.variants.map((v) => `<tr class="${v.stock ? '' : 'out'}">
       <td><span class="vname">${esc(v.name)}</span>${v.size ? `<span class="vsize">${esc(v.size)}</span>` : ''}${v.stock ? '' : '<span class="vsize">Sold out</span>'}</td>
       <td class="r"><span class="vprice">${v.price > 0 ? inr(v.price) : 'Ask'}</span>${v.mrp ? `<span class="vmrp">${inr(v.mrp)}</span>` : ''}${v.unit ? `<span class="vunit">${esc(v.unit)}</span>` : ''}</td>
@@ -258,7 +259,7 @@ async function openP(id) {
     <div class="dbody">
       <div class="dtile">${tile(p, true)}${p.img ? `<img class="shot" src="${esc(photo(p.img, 900))}" alt="" decoding="async">` : ''}</div>
       <div class="meta"><span class="tag seller" style="background:${SELLER_COLOR(p.si)}">${esc(p.seller)}</span>
-        <span class="tag">${esc(p.pet)}</span><span class="tag">${esc(p.cat)}</span><span class="tag">${p.stock ? 'In stock' : 'Sold out'}</span></div>
+        <span class="tag">${esc(p.pet)}</span><span class="tag">${esc(p.cat)}</span><span class="tag">In stock</span></div>
       ${cmp}
       <p class="dsub">${p.variants.length} ${p.variants.length === 1 ? 'option' : 'options'}</p>
       <table class="vt"><thead><tr><th>Variant</th><th class="r">Price</th><th class="r">Off</th></tr></thead><tbody>${rows}</tbody></table>
@@ -327,6 +328,11 @@ function connectLive() {
     const fresh = grid.querySelector(`[data-open="${CSS.escape(c.id)}"]`);
     fresh.dataset.w = 1; cardWatcher.observe(fresh);
     if (changed) { fresh.classList.add('flash'); setTimeout(() => fresh.classList.remove('flash'), 1600); }
+  });
+  es.addEventListener('remove', (e) => {
+    const { id } = JSON.parse(e.data);
+    const el = grid.querySelector(`[data-open="${CSS.escape(id)}"]`);
+    if (el) { el.classList.add('gone'); setTimeout(() => el.remove(), 600); }
   });
   es.addEventListener('rebuilt', () => { if (!drawer.classList.contains('on')) apply(); pollMeta(); });
   es.onerror = () => { liveToken = null; };   /* EventSource reconnects on its own */

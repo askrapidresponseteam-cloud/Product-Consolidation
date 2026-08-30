@@ -87,7 +87,7 @@ async function api(req, res, url) {
       q: String(sp.get('q') || '').slice(0, 120),
       store: list(sp, 'store'), pet: list(sp, 'pet'), cat: list(sp, 'cat'), brand: list(sp, 'brand'),
       min: numOr(sp.get('min')), max: numOr(sp.get('max')), disc: numOr(sp.get('disc'), 0),
-      stock: sp.get('stock') === '1', both: sp.get('both') === '1',
+      both: sp.get('both') === '1',
       sort: sp.get('sort') || 'disc', page: numOr(sp.get('page'), 1),
     });
     out.builtAt = catalog.builtAt;
@@ -99,6 +99,7 @@ async function api(req, res, url) {
     const p = catalog.byId.get(decodeURIComponent(m[1]));
     if (!p) return json(res, 404, { error: 'not found' });
     const live = await refreshProduct(p);          /* re-read from the store now */
+    if (live.gone) return json(res, 410, { error: 'sold out' });
     return json(res, 200, detailDTO(live.p, live));
   }
 

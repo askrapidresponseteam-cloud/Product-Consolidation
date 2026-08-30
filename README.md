@@ -45,6 +45,13 @@ simply isn't in the catalogue. `DISK_CACHE` keeps the last live crawl on disk
 so a restart serves data while the fresh crawl runs; set it to `false` to
 always start empty.
 
+## Stock
+
+Sold-out products and sold-out variants are never listed, priced, or used in
+comparisons. When an on-screen product sells out, its card is removed from
+every open tab; opening a product that has just sold out says so instead of
+showing a price.
+
 ## Completeness
 
 For each store the crawler unions three sources: the flat `/products.json`

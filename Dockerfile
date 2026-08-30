@@ -5,5 +5,7 @@ COPY server ./server
 COPY public ./public
 COPY tools ./tools
 ENV PORT=8080 DATA_DIR=/data
+VOLUME ["/data"]
 EXPOSE 8080
-CMD ["node","server/index.mjs"]
+USER node
+CMD ["node", "server/index.mjs"]
