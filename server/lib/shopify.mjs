@@ -39,6 +39,21 @@ async function getText(url, signal) {
   } catch { return null; }
 }
 
+/* Keep only what the catalogue uses. A raw Shopify product carries the full
+   HTML description, every image and every option; across 25k products that is
+   hundreds of MB and it is what crashed a small container at the end of the
+   largest store's crawl. */
+export function slim(p) {
+  if (!p || !p.handle) return null;
+  const img = p.images?.[0]?.src || p.image?.src || '';
+  return {
+    id: p.id, handle: p.handle, title: p.title || '', vendor: p.vendor || '',
+    product_type: p.product_type || '', tags: Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || ''),
+    updated_at: p.updated_at || null, images: img ? [{ src: img }] : [],
+    variants: (p.variants || []).map((v) => ({ id: v.id, title: v.title, price: v.price, compare_at_price: v.compare_at_price, available: !!v.available })),
+  };
+}
+
 async function withRetry(fn, tries = 3, log) {
   let last;
   for (let a = 1; a <= tries; a++) {
@@ -73,7 +88,7 @@ async function walkFeed(found, log, signal) {
     if (!r.ok) throw new Error(`feed page ${page}: ${r.status || r.error || 'failed'}`);
     const products = r.body.products || [];
     if (!products.length) break;
-    for (const p of products) out.set(p.handle, p);
+    for (const p of products) { const q = slim(p); if (q) out.set(q.handle, q); }
     log?.(`feed page ${page}, ${out.size} products`);
     await sleep(CONFIG.pauseMs);
   }
@@ -96,7 +111,7 @@ async function walkCollections(found, log, signal, into) {
       if (!r.ok) break;
       const list = r.body?.products || [];
       if (!list.length) break;
-      for (const p of list) if (!into.has(p.handle)) { into.set(p.handle, p); added++; }
+      for (const p of list) if (p.handle && !into.has(p.handle)) { into.set(p.handle, slim(p)); added++; }
       await sleep(CONFIG.pauseMs);
     }
     if (n % 10 === 0) log?.(`collection ${n + 1}/${cols.length}, +${added}`);
@@ -122,7 +137,7 @@ async function sitemapHandles(found, signal) {
 /** One product, live, by handle. Used for the per-detail refresh too. */
 export async function fetchProduct(base, handle, signal) {
   const r = await getJSON(`${base}/products/${encodeURIComponent(handle)}.json`, signal).catch(() => ({ ok: false }));
-  return r.ok && r.body?.product ? r.body.product : null;
+  return r.ok && r.body?.product ? slim(r.body.product) : null;
 }
 
 /**

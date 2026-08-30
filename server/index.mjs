@@ -127,7 +127,7 @@ function serveStatic(req, res, url) {
     if (err || !st.isFile()) return send(res, 404, 'not found', { 'Content-Type': 'text/plain' });
     const ext = path.extname(file).toLowerCase();
     res.writeHead(200, { ...secHeaders, 'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600' });
+      'Cache-Control': 'no-cache' });          /* always revalidate, so a deploy reaches every visitor at once */
     fs.createReadStream(file).pipe(res);
   });
 }
