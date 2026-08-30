@@ -1,0 +1,14 @@
+{
+  "name": "the-shelf",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Live six-store pet catalogue: server-side crawl, matching and pricing; render-only browser client.",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server/index.mjs",
+    "probe": "node tools/probe.mjs",
+    "mock": "node tools/mock-store.mjs 9100 tools/sample-store.json --drift",
+    "test": "node --test test/*.test.mjs"
+  }
+}
