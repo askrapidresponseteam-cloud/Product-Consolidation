@@ -1,1 +1,0 @@
-{"$schema":"https://railway.com/railway.schema.json","deploy":{"healthcheckPath":"/api/meta","healthcheckTimeout":120,"restartPolicyType":"ON_FAILURE","restartPolicyMaxRetries":10}}
