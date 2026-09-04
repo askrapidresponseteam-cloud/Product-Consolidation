@@ -922,9 +922,22 @@ document.addEventListener('keydown', (e) => {
    top-level binding would have to keep its name forever. */
 Object.assign(window, {
   apply, debApply, resetAll, clearSearch, togg, toggleSidebar, drawFilters,
-  openP, closeAll, openCompare, closeCompare, togglePick, unpick, clearPicks,
-  S, get catsOpen(){ return catsOpen; }, set catsOpen(v){ catsOpen = v; },
-  get brandQuery(){ return brandQuery; }, set brandQuery(v){ brandQuery = v; },
+  openP, closeAll, openCompare, closeCompare, togglePick, unpick, clearPicks, S,
+});
+
+/* catsOpen and brandQuery must be defineProperty, not Object.assign.
+   Object.assign *invokes* a getter and copies the resulting value as a plain
+   data property, throwing the setter away. The markup does
+   `brandQuery=this.value; drawFilters()`, so that write landed on a dead copy
+   while the real variable stayed empty and the box refused to accept a
+   character. These need live bindings, and only defineProperty gives them. */
+Object.defineProperties(window, {
+  catsOpen: {
+    get: () => catsOpen, set: (v) => { catsOpen = v; }, configurable: true,
+  },
+  brandQuery: {
+    get: () => brandQuery, set: (v) => { brandQuery = v; }, configurable: true,
+  },
 });
 
 /* Test surface, present only in the debug build. esbuild replaces __DEBUG__
