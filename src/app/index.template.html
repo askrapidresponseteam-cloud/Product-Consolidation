@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Shelf: six store pet catalogue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* @STYLES */
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="wordmark" href="#" onclick="resetAll();return false">
+      <b>The&nbsp;Shelf</b><span>Six store catalogue</span>
+    </a>
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search 17,324 products. Try “kitten wet food” or “Farmina”" autocomplete="off" aria-label="Search products">
+      <button class="clear" id="qclear" aria-label="Clear search">✕</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sbhead">
+      <h2>Filters</h2>
+      <button onclick="toggleSidebar(false)" aria-label="Close filters">✕</button>
+    </div>
+    <div id="facets"></div>
+  </aside>
+  <main class="main">
+    <div class="toolbar">
+      <button class="filterbtn" onclick="toggleSidebar(true)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+        Filters <b id="fcount" hidden>0</b>
+      </button>
+      <div class="count" id="count"></div>
+      <div class="spacer"></div>
+      <div class="sortwrap">
+        <label for="sort">Sort</label>
+        <select class="sort" id="sort">
+          <option value="disc" selected>Biggest discount</option>
+          <option value="pop">Featured</option>
+          <option value="plo">Price: low to high</option>
+          <option value="phi">Price: high to low</option>
+          <option value="unit">Best value per unit</option>
+          <option value="save">Biggest saving vs other stores</option>
+          <option value="az">Name A–Z</option>
+        </select>
+      </div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="grid"></div>
+    <div class="sentinel" id="sentinel"></div>
+    <div class="loadmsg" id="loadmsg"></div>
+  </main>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeAll()"></div>
+<div class="tray" id="tray" role="region" aria-label="Selected products"></div>
+<aside class="cmpsheet" id="cmpsheet" role="dialog" aria-modal="true" aria-label="Compare selected products"></aside>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Product details"></aside>
+
+<script>
+/* @DATA */
+/* @APP */
+</script>
+</body>
+</html>
