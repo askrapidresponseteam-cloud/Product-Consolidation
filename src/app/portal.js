@@ -12,6 +12,7 @@ import { sizeKey } from '../matching/size-key.js';
 import { comparable } from '../matching/gate.js';
 import { flagImplausible } from '../matching/implausible.js';
 import { buildComparisons } from '../matching/comparisons.js';
+import { recomputeAggregates } from '../catalogue/aggregate.js';
 import { RULES } from '../pricing/rules.js';
 import { quote as quoteFor } from '../pricing/quote.js';
 import { rankQuotes } from '../pricing/rank.js';
@@ -113,6 +114,9 @@ const P = DATA.products.map((p, idx) => {
    verified cross-store comparisons. Both mutate P, which is what the render
    layer below expects to find. */
 flagImplausible(P);
+/* Must run between the two: the flag has to exist before aggregates are
+   recomputed, and comparisons read the corrected figures. */
+recomputeAggregates(P);
 buildComparisons(P, MATCH, sellers);
 
 const CAT_STYLE = {
@@ -231,8 +235,11 @@ function apply(){
 
   const c = {
     pop:(a,b) => (b.score - a.score) || (a.i - b.i),
-    plo:(a,b) => a.lo - b.lo,
-    phi:(a,b) => b.hi - a.hi,
+    /* Order by the price on the card, not by a hidden end of the range. A
+       tile reading "from 348" sitting above one reading "2,56,500" in a
+       high-to-low list is indefensible however the number was derived. */
+    plo:(a,b) => a.lead - b.lead,
+    phi:(a,b) => b.lead - a.lead,
     /* "100% off" on a gift-with-purchase or a Rs1 cart add-on is not an
        offer you can take, so those sit under the real markdowns. */
     disc:(a,b) => ((a.gift || a.noPrice ? 1 : 0) - (b.gift || b.noPrice ? 1 : 0))
