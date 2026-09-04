@@ -4,17 +4,21 @@
   "private": true,
   "type": "module",
   "description": "Six-store pet catalogue: like-for-like matching, effective-price engine, faceted browse.",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src test tools build e2e",
     "build": "node build/compose.mjs",
-    "build:min": "node build/compose.mjs && node build/harden.mjs",
+    "build:min": "npm run build && npm run build:release && node build/harden.mjs",
     "audit:matches": "node tools/audit-matches.mjs",
     "check:collision": "node tools/collision.mjs",
     "e2e": "node e2e/run.mjs",
-    "verify": "npm run lint && npm run test && npm run build:min && npm run e2e && npm run check:collision"
+    "verify": "npm run lint && npm run test && npm run build:min && npm run e2e && npm run check:collision",
+    "vercel-build": "node build/deploy.mjs",
+    "build:release": "node build/compose.mjs --no-debug"
   },
   "devDependencies": {
     "clean-css": "^5.3.3",
