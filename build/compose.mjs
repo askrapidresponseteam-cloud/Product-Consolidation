@@ -8,9 +8,22 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
-const root = new URL('..', import.meta.url).pathname;
+/* Locate the repo root by walking up for package.json, rather than assuming
+   this file sits exactly one directory below it. A hand-placed script in the
+   wrong folder should not resolve to the wrong root and then fail somewhere
+   confusing. */
+function repoRoot(from) {
+  let d = path.dirname(fileURLToPath(from));
+  for (let i = 0; i < 6; i++) {
+    if (fs.existsSync(path.join(d, 'package.json'))) return d;
+    d = path.dirname(d);
+  }
+  throw new Error('Could not find package.json above ' + fileURLToPath(from));
+}
+const root = repoRoot(import.meta.url);
 const r = (...p) => path.join(root, ...p);
 
 const template = fs.readFileSync(r('src/app/index.template.html'), 'utf8');

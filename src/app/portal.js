@@ -875,6 +875,41 @@ narrow.addEventListener('change', setPlaceholder);
 apply();
 renderTray();
 
+/* ---------------- input guards ----------------
+
+   Right-click, image dragging and the usual view-source shortcuts are
+   suppressed. Worth being plain about what this achieves: it is a speed bump,
+   not protection. Devtools still open from the browser's own menu, which no
+   page can intercept, and the catalogue is plain JSON sitting in this file
+   either way. It deters casual copying and nothing more.
+
+   The cost is real though. On a page whose whole purpose is sending people to
+   store listings, blocking the menu also blocks "open link in new tab", which
+   is how anyone actually compares two shops. Flip this to true to keep the
+   menu on links and lose nothing that matters. */
+const ALLOW_MENU_ON_LINKS = false;
+
+document.addEventListener('contextmenu', (e) => {
+  if (ALLOW_MENU_ON_LINKS && e.target.closest && e.target.closest('a[href]')) return;
+  e.preventDefault();
+});
+
+/* Dragging an image off the page is the other one-gesture copy. */
+document.addEventListener('dragstart', (e) => {
+  if (e.target.tagName === 'IMG') e.preventDefault();
+});
+
+/* F12, Ctrl/Cmd+Shift+I/J/C, Ctrl/Cmd+U. Deliberately not Ctrl+C: breaking
+   copy would stop people lifting a product name into a search box, which is a
+   normal thing to do here and nothing to do with protecting anything. */
+document.addEventListener('keydown', (e) => {
+  const mod = e.ctrlKey || e.metaKey;
+  const k = (e.key || '').toUpperCase();
+  if (e.key === 'F12') { e.preventDefault(); return; }
+  if (mod && e.shiftKey && (k === 'I' || k === 'J' || k === 'C')) { e.preventDefault(); return; }
+  if (mod && k === 'U') e.preventDefault();
+});
+
 /* The static markup calls these by name from on*= attributes. Exposing them
    explicitly is what lets the bundler mangle everything else: an implicit
    top-level binding would have to keep its name forever. */

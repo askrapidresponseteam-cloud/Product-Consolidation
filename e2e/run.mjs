@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 
 const NEEDS_HOOK = new Set(['drawer', 'filters', 'engine-test']);
-const SUITES = ['suite', 'multi', 'drawer', 'filters', 'engine-test', 'badgecheck'];
+const SUITES = ['suite', 'multi', 'drawer', 'filters', 'engine-test', 'badgecheck', 'guards'];
 const targets = ['dist/index.html'];
 if (fs.existsSync('dist/index.min.html')) targets.push('dist/index.min.html');
 
